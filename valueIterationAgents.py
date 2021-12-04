@@ -77,6 +77,7 @@ class ValueIterationAgent(ValueEstimationAgent):
           value function stored in self.values.
         """
         "*** YOUR CODE HERE ***"
+        "Hier den Code einfügen"
         util.raiseNotDefined()
 
     def computeActionFromValues(self, state):
