@@ -60,9 +60,20 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.runValueIteration()
 
     def runValueIteration(self):
-        # Write value iteration code here
-        "*** YOUR CODE HERE ***"
-
+        # only iterate through the whole mdp tree until reaching self.iterations
+        # need a counter starting by zero
+        my_iterator = 0
+        q_values = []
+        while my_iterator < self.iterations:
+            copy_values = self.values.copy()
+            my_iterator += 1
+            for state in self.mdp.getStates():
+                if not self.mdp.isTerminal(state):
+                    poss_actions = self.mdp.getPossibleActions(state)
+                    for action in poss_actions:
+                        q_values.append(self.computeQValueFromValues(state, action))
+                        copy_values[state] = max(q_values)
+            self.values = copy_values
 
     def getValue(self, state):
         """
@@ -97,7 +108,7 @@ class ValueIterationAgent(ValueEstimationAgent):
           there are no legal actions, which is the case at the
           terminal state, you should return None.
         """
-        "*** YOUR CODE HERE ***"
+        "*** calculate policy pi(state) ***"
         util.raiseNotDefined()
 
     def getPolicy(self, state):
