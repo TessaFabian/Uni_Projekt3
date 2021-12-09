@@ -193,28 +193,36 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
         priority = util.PriorityQueue()
         states = self.mdp.getStates()
 
-        def calcPredecessors(states, predecessors):
-            # calc predecessors for all states
-            # the first state in a mdp has no predecessor
-            for state in states:
-                actions = self.mdp.getPossibleActions(state)
-                for action in actions:
-                    newPossibleStates = self.mdp.getTransitionStatesAndProbs(state, action)
-                    # newPossibleState = (newState, prob)
-                    for entry in newPossibleStates:
-                        newState = entry[0]
-                        if newState not in predecessors:
-                            # each state is a subtree. So we have to begin a new set of predecessors
-                            predecessors[newState] = set()
-                        predecessors[newState].add(state)
-            return predecessors
+        # def calcPredecessors(states, predecessors):
+        #     # calc predecessors for all states
+        #     # the first state in a mdp has no predecessor
+        #     for state in states:
+        #         actions = self.mdp.getPossibleActions(state)
+        #         for action in actions:
+        #             newPossibleStates = self.mdp.getTransitionStatesAndProbs(state, action)
+        #             # newPossibleState = (newState, prob)
+        #             for entry in newPossibleStates:
+        #                 newState = entry[0]
+        #                 if newState not in predecessors:
+        #                     # each state is a subtree. So we have to begin a new set of predecessors
+        #                     predecessors[newState] = set()
+        #                 predecessors[newState].add(state)
+        #     return predecessors
 
         def calcNewQValue(state):
             action = self.computeActionFromValues(state)
             return self.computeQValueFromValues(state, action)
 
         # calc predecessors
-        predecessors = calcPredecessors(states, predecessors)
+        for state in states:
+            actions = self.mdp.getPossibleActions(state)
+            for action in actions:
+                nextStates = self.mdp.getTransitionStatesAndProbs(state, action)
+                for entry in nextStates:
+                    entry = entry[0]
+                    if entry not in predecessors:
+                        predecessors[entry] = set()
+                    predecessors[entry].add(state)
 
         for state in states:
             if self.mdp.isTerminal(state) == False:
@@ -227,7 +235,8 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
                 break
             state = priority.pop()
             newQValue = calcNewQValue(state)
-            preNodesOfState = calcPredecessors(state, predecessors)
+            self.values[state] = newQValue
+            preNodesOfState = predecessors[state]
             for predecessor in preNodesOfState:
                 newQValueOfPred = calcNewQValue(predecessor)
                 diff = abs(newQValueOfPred - self.values[predecessor])
