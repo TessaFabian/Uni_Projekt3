@@ -188,3 +188,53 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
 
+        # we need predecessors, an empty priority queue and all states of the given mdp
+        predecessors = util.Counter()
+        priority = util.PriorityQueue()
+        states = self.mdp.getStates()
+
+        def calcPredecessors(states, predecessors):
+            # calc predecessors for all states
+            # the first state in a mdp has no predecessor
+            for state in states:
+                actions = self.mdp.getPossibleActions(state)
+                for action in actions:
+                    newPossibleStates = self.mdp.getTransitionStatesAndProbs(state, action)
+                    # newPossibleState = (newState, prob)
+                    for entry in newPossibleStates:
+                        newState = entry[0]
+                        if newState not in predecessors:
+                            # each state is a subtree. So we have to begin a new set of predecessors
+                            predecessors[newState] = set()
+                        predecessors[newState].add(state)
+            return predecessors
+
+        def calcNewQValue(state):
+            action = self.computeActionFromValues(state)
+            return self.computeQValueFromValues(state, action)
+
+        # calc predecessors
+        predecessors = calcPredecessors(states, predecessors)
+
+        for state in states:
+            if self.mdp.isTerminal(state) == False:
+                q_value = calcNewQValue(state)
+                diff = abs(q_value - self.values[state])
+                priority.push(state, -diff)
+
+        for index in range(self.iterations):
+            if priority.isEmpty():
+                break
+            state = priority.pop()
+            newQValue = calcNewQValue(state)
+            preNodesOfState = calcPredecessors(state, predecessors)
+            for predecessor in preNodesOfState:
+                newQValueOfPred = calcNewQValue(predecessor)
+                diff = abs(newQValueOfPred - self.values[predecessor])
+                if diff > self.theta:
+                    priority.update(predecessor, -diff)
+
+
+
+
+
